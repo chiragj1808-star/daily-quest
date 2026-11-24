@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6C4DF6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Daily Quest">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Daily Quest – Habit Tracker</title>
+<style>
+:root{--bg:#F4F2FF;--card:#fff;--ink:#1D1A33;--mut:#7A7694;--line:#E7E4F5;--acc:#6C4DF6;--acc2:#FF7A59;--ok:#22C55E;--warn:#F59E0B;--bad:#EF4444;--sh:0 4px 18px rgba(60,40,160,.08)}
+@media (prefers-color-scheme:dark){:root{--bg:#121022;--card:#1C1933;--ink:#F1EFFF;--mut:#9D98BD;--line:#2C2850;--sh:0 4px 18px rgba(0,0,0,.35)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+#app{max-width:720px;margin:0 auto;padding:12px 14px 96px}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:16px;margin-bottom:12px}
+small{color:var(--mut)}
+h3{margin:18px 4px 10px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+#hdr{background:linear-gradient(135deg,#6C4DF6,#9B6BFF 60%,#FF7A59);color:#fff;border-radius:22px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.who{display:flex;align-items:center;gap:10px;color:#fff;text-align:left}
+.who b{display:block;font-size:17px}.who small{color:#ffffffcc}
+.av{width:42px;height:42px;border-radius:50%;background:#ffffff33;display:grid;place-items:center;font-size:24px;flex:none}
+.hstats{display:flex;gap:6px}.pill{background:#ffffff2e;border-radius:99px;padding:6px 10px;font-weight:700;font-size:14px}
+.xpbar{grid-column:1/-1;height:8px;background:#ffffff40;border-radius:9px;overflow:hidden}.xpbar i{display:block;height:100%;background:#fff;border-radius:9px;transition:width .6s}
+.xplbl{grid-column:1/-1;font-size:12px;opacity:.9;margin-top:-4px}
+.datenav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px}
+.datenav div{text-align:center}.datenav b{display:block;font-size:18px}
+.datenav button{width:40px;height:40px;border-radius:12px;background:var(--card);box-shadow:var(--sh);font-size:22px}
+.datenav button:disabled{opacity:.3}
+.hero{display:flex;align-items:center;gap:16px}
+.ringw{position:relative;width:118px;height:118px;flex:none}
+.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12}.trk{stroke:var(--line)}.prg{stroke:url(#g);stroke-linecap:round;transition:stroke-dashoffset .7s}
+.ringtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center}.ringtxt b{font-size:26px}
+.herotxt h2{margin:0 0 6px;font-size:19px;line-height:1.25}.herotxt p{margin:2px 0;color:var(--mut)}
+.xpday{color:var(--acc)!important;font-weight:700}
+.next{background:linear-gradient(90deg,#FFF1EC,#FFE6DD);color:#8A3416;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+@media (prefers-color-scheme:dark){.next{background:#3A2320;color:#FFB59E}}
+.rival{background:var(--card);border-radius:14px;padding:10px 14px;margin-bottom:12px;box-shadow:var(--sh);font-size:14px;cursor:pointer}
+.task{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--sh);border:2px solid transparent;cursor:pointer;transition:transform .1s;user-select:none}
+.task:active{transform:scale(.98)}
+.tm{font-weight:700;font-variant-numeric:tabular-nums;width:48px;color:var(--mut)}
+.ic{font-size:24px;width:30px;text-align:center}
+.tx{flex:1;min-width:0}.tx b{display:block}.tx small{font-size:12.5px}
+.chk{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--line);display:grid;place-items:center;color:#fff;font-weight:900;flex:none}
+.task.done{opacity:.75}.task.done .chk{background:var(--ok);border-color:var(--ok)}.task.done b{text-decoration:line-through;text-decoration-color:var(--mut)}
+.task.now{border-color:var(--acc);animation:pulse 1.8s infinite}
+.task.late .tx small{color:var(--bad)}
+.ontime{color:var(--ok);font-weight:700}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(108,77,246,.15)}}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:4px;box-shadow:var(--sh);margin-bottom:12px}
+.seg button{flex:1;padding:8px;border-radius:9px;font-weight:600;color:var(--mut)}.seg button.on{background:var(--acc);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--sh);text-align:center}.stat b{display:block;font-size:22px}.stat small{font-size:12px}
+.chart svg{width:100%;height:150px;display:block}
+.chartlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:4px}
+.trow{display:grid;grid-template-columns:28px 1fr 48px;gap:8px;align-items:center;margin:9px 0}
+.bar{height:10px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;border-radius:9px}
+.trow span{font-size:14px}.trow em{font-style:normal;font-weight:700;text-align:right}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:4px}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--line)}
+.legend{display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:12px;color:var(--mut);margin-top:8px;flex-wrap:wrap}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.viewing{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--acc);border-radius:14px;padding:10px 12px;margin-bottom:12px}.viewing div{flex:1}
+/* team */
+.prow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}.prow:last-child{border:0}
+.prow .info{flex:1;min-width:0}.prow .info b{font-size:16px}
+.mini{position:relative;width:52px;height:52px;flex:none}.mini svg{width:100%;height:100%;transform:rotate(-90deg)}.mini circle{fill:none;stroke-width:9}
+.mini span{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;font-weight:800}
+.dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}.dots i{font-style:normal;font-size:15px;line-height:1}.dots i.no{filter:grayscale(1);opacity:.25}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--bg);color:var(--mut);vertical-align:middle;margin-left:4px}
+.tag.me{background:var(--acc);color:#fff}
+.lbt{width:100%;border-collapse:collapse;font-size:14px}.lbt th{font-size:11px;color:var(--mut);text-transform:uppercase;font-weight:700;padding:6px 4px;text-align:right}
+.lbt td{padding:9px 4px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.lbt td:first-child,.lbt th:first-child{text-align:left}
+.lbt tr.me td{font-weight:800}
+.h2h{width:100%;border-collapse:separate;border-spacing:3px;font-size:13px}.h2h th{font-size:20px;padding:2px}.h2h td{text-align:center;border-radius:8px;padding:7px 2px;font-weight:700;color:#fff}.h2h td:first-child{text-align:left;color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.h2h td.best{outline:2px solid var(--ink)}
+.empty{text-align:center;padding:24px 10px}.empty .big{font-size:48px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{background:var(--card);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--sh)}
+.badge .bi{font-size:36px}.badge b{display:block;margin:4px 0 2px}.badge small{display:block;font-size:12px;min-height:30px}
+.badge.lock .bi{filter:grayscale(1);opacity:.35}
+.badge .bar{height:6px;margin-top:8px}.badge .bar i{background:var(--acc)}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}label.f+input{width:100%}
+.btn{background:var(--acc);color:#fff;border-radius:12px;padding:10px 14px;font-weight:600}
+.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:var(--bad)}.btn.sm{padding:6px 10px;font-size:13px;border-radius:9px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.emo{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.emo button{font-size:26px;width:46px;height:46px;border-radius:12px;background:var(--bg)}.emo button.on{outline:3px solid var(--acc)}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);box-shadow:0 -4px 18px rgba(0,0,0,.08);display:flex;justify-content:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav div{display:flex;max-width:720px;width:100%}
+nav button{flex:1;padding:6px 2px;display:flex;flex-direction:column;align-items:center;font-size:11.5px;color:var(--mut);font-weight:600}nav button span{font-size:22px}nav button.on{color:var(--acc)}
+.ov{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:22px}}
+.sheet h2{margin:0 0 10px}.sheet ol{padding-left:20px;line-height:1.6;font-size:14px}
+.urow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;cursor:pointer}.urow.on{background:var(--bg);outline:2px solid var(--acc)}.urow div{flex:1}
+.linkbox{width:100%;font-size:12px;margin-top:8px}
+code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:12px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:99px;font-weight:700;opacity:0;transition:.3s;z-index:20;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
+.onb{text-align:center;padding-top:40px}.onb h1{font-size:30px;margin:8px 0}.onb input{width:100%;font-size:18px;padding:12px;margin-top:10px}.onb .emo{justify-content:center}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4DF6"/><stop offset="1" stop-color="#FF7A59"/></linearGradient></defs></svg>
+<div id="app"><div id="hdr"></div><div id="main"></div></div>
+<nav id="nav"><div>
+  <button data-t="today" onclick="go('today')"><span>✅</span>Today</button>
+  <button data-t="team" onclick="go('team')"><span>👥</span>Team</button>
+  <button data-t="progress" onclick="go('progress')"><span>📈</span>Progress</button>
+  <button data-t="badges" onclick="go('badges')"><span>🏅</span>Badges</button>
+  <button data-t="settings" onclick="go('settings')"><span>⚙️</span>Settings</button>
+</div></nav>
+<div id="toast"></div>
+<canvas id="fx"></canvas>
+<input type="file" id="file" accept=".json,application/json" hidden onchange="importData(this.files[0]);this.value=''">
+
+<script>
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey=k=>{const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mins=t=>{const[h,m]=String(t).split(':').map(Number);return h*60+(m||0)};
+const nowMins=()=>{const n=new Date();return n.getHours()*60+n.getMinutes()};
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=d=>d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+const ago=ts=>{if(!ts)return'never';const s=(Date.now()-ts)/1000;return s<90?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':Math.round(s/86400)+' days ago'};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
+
+/* ================= data ================= */
+const STORE='dailyquest_v1', THRESH=0.7;
+const DEFAULT_TASKS=[
+ {id:'wake',time:'06:00',name:'Wake up',icon:'⏰'},
+ {id:'exercise',time:'06:15',name:'Exercise',icon:'🏃'},
+ {id:'breakfast',time:'07:00',name:'Breakfast and prep for lunch',icon:'🍳'},
+ {id:'office',time:'08:00',name:'Start office',icon:'💼'},
+ {id:'lunch',time:'13:00',name:'Lunch',icon:'🥗'},
+ {id:'finish',time:'19:00',name:'Finish office',icon:'🏁'},
+ {id:'dinner',time:'19:30',name:'Dinner',icon:'🍽️'},
+ {id:'walk',time:'20:00',name:'Walk downstairs',icon:'🚶'},
+ {id:'fun',time:'20:30',name:'Entertainment',icon:'🎮'},
+ {id:'learn',time:'21:00',name:'Personal development',icon:'📚'},
+ {id:'sleep',time:'22:00',name:'Sleep',icon:'😴'}];
+const AVATARS=['🦁','🐯','🦊','🐼','🐨','🐸','🦄','🐙','🚀','🌸','⚽','🎧'];
+const PCOL=['#6C4DF6','#FF7A59','#22C55E','#3B82F6','#EC4899','#F59E0B','#14B8A6','#8B5CF6'];
+const LVL_NAMES=['Rookie','Starter','Go-Getter','Habit Builder','Consistent','Focused','Disciplined','Unstoppable','Habit Master','Legend'];
+const tn=(id,n)=>(P(id).tasks.find(t=>t.id===n||t.name.toLowerCase().includes(n))||{}).id;
+const cnt=(m,id,n)=>m[tn(id,n)]||0;
+const BADGES=[
+ {id:'first',icon:'🌱',name:'First Step',desc:'Complete your first task',val:s=>s.tasksDone,goal:1},
+ {id:'p1',icon:'🏆',name:'Perfect Day',desc:'Complete every task in one day',val:s=>s.perfect,goal:1},
+ {id:'s3',icon:'🔥',name:'On Fire',desc:'3-day streak (70%+ each day)',val:s=>s.best,goal:3},
+ {id:'s7',icon:'⚡',name:'Week Warrior',desc:'7-day streak',val:s=>s.best,goal:7},
+ {id:'early',icon:'🐦',name:'Early Bird',desc:'Wake up on time 7 times',val:s=>cnt(s.perTaskOn,s.id,'wake'),goal:7},
+ {id:'fit',icon:'💪',name:'Fit & Strong',desc:'Exercise 20 times',val:s=>cnt(s.perTask,s.id,'exercise'),goal:20},
+ {id:'walk',icon:'👟',name:'Step Master',desc:'Walk downstairs 20 times',val:s=>cnt(s.perTask,s.id,'walk'),goal:20},
+ {id:'learn',icon:'🧠',name:'Lifelong Learner',desc:'Personal development 20 times',val:s=>cnt(s.perTask,s.id,'personal development'),goal:20},
+ {id:'sleep',icon:'🌙',name:'Sleep Champion',desc:'Go to sleep on time 14 times',val:s=>cnt(s.perTaskOn,s.id,'sleep'),goal:14},
+ {id:'p10',icon:'👑',name:'Perfectionist',desc:'10 perfect days',val:s=>s.perfect,goal:10},
+ {id:'s30',icon:'💎',name:'Diamond Habit',desc:'30-day streak',val:s=>s.best,goal:30},
+ {id:'x1k',icon:'⭐',name:'1K Club',desc:'Earn 1,000 XP',val:s=>s.xp,goal:1000},
+ {id:'t500',icon:'🎯',name:'Task Machine',desc:'Complete 500 tasks',val:s=>s.tasksDone,goal:500},
+ {id:'x5k',icon:'🌟',name:'XP Legend',desc:'Earn 5,000 XP',val:s=>s.xp,goal:5000}];
+
+let S=load(), tab='today', viewDate=new Date(), range=30, pickAv=AVATARS[0], viewUser=null, teamRange=7;
+function load(){try{const s=JSON.parse(localStorage.getItem(STORE));if(s){s.friends=s.friends||{};s.settings=Object.assign({window:30,sync:{db:'',group:'',last:0}},s.settings);s.settings.sync=s.settings.sync||{db:'',group:'',last:0}}return s}catch(e){return null}}
+function save(){localStorage.setItem(STORE,JSON.stringify(S))}
+const U=()=>S.users.find(u=>u.id===S.current);
+const D=(id=S.current)=>S.data[id];
+/* P = any profile: local person or synced/shared friend */
+const P=id=>S.data[id]||S.friends[id];
+const person=id=>S.users.find(u=>u.id===id)||S.friends[id];
+const isLocal=id=>!!S.data[id];
+const tasks=id=>[...P(id).tasks].sort((a,b)=>mins(a.time)-mins(b.time));
+function everyone(){return[...S.users.map(u=>u.id),...Object.keys(S.friends).filter(id=>!S.data[id])]}
+function makeUser(name,avatar){const u={id:uid(),name,avatar};S.users.push(u);S.data[u.id]={tasks:clone(DEFAULT_TASKS),log:{},seen:[]};return u}
+
+/* ================= scoring ================= */
+function dayStats(id,k){const p=P(id),ts=p.tasks,log=(p.log||{})[k]||{};let done=0,on=0;
+ ts.forEach(t=>{if(log[t.id]){done++;if(log[t.id].on)on++}});
+ const total=ts.length,pct=total?done/total:0;
+ return{done,on,total,pct,xp:done*10+on*5+(total&&done===total?50:0)}}
+function allStats(id){const p=P(id),lg=p.log||{};const keys=Object.keys(lg).filter(k=>Object.keys(lg[k]).length).sort();
+ let xp=0,perfect=0,tasksDone=0,onTime=0;const perTask={},perTaskOn={};
+ keys.forEach(k=>{const s=dayStats(id,k);xp+=s.xp;tasksDone+=s.done;onTime+=s.on;if(s.total&&s.done===s.total)perfect++;
+  for(const t in lg[k]){perTask[t]=(perTask[t]||0)+1;if(lg[k][t].on)perTaskOn[t]=(perTaskOn[t]||0)+1}});
+ let best=0,run=0;const today=key(new Date());
+ if(keys.length){let day=parseKey(keys[0]);while(key(day)<=today){if(dayStats(id,key(day)).pct>=THRESH){run++;best=Math.max(best,run)}else run=0;day=addDays(day,1)}}
+ let cur=0,day=new Date();if(dayStats(id,key(day)).pct<THRESH)day=addDays(day,-1);
+ while(dayStats(id,key(day)).pct>=THRESH){cur++;day=addDays(day,-1)}
+ return{id,xp,perfect,tasksDone,onTime,perTask,perTaskOn,best:Math.max(best,cur),cur}}
+function periodStats(id,n){let xp=0,p=0,perf=0,dn=0,on=0;for(let i=0;i<n;i++){const s=dayStats(id,key(addDays(new Date(),-i)));xp+=s.xp;p+=s.pct;dn+=s.done;on+=s.on;if(s.total&&s.done===s.total)perf++}return{xp,avg:p/n,perf,ontime:dn?on/dn:0}}
+function level(xp){let n=1;while(xp>=50*n*(n+1))n++;return{n,name:LVL_NAMES[Math.min(n-1,LVL_NAMES.length-1)],from:50*(n-1)*n,to:50*n*(n+1)}}
+function msg(s,left){if(!s.total)return'Add some tasks in Settings';
+ if(s.done===s.total)return'PERFECT DAY! 🏆 You smashed it';
+ if(s.done===0)return'A fresh day — grab your first win! 💪';
+ if(left<=2)return`So close! Just ${left} to go 🎯`;
+ if(s.pct>=.5)return"You're on a roll 🔥 Keep going";
+ return'Great start! Build the momentum 🚀'}
+const col=p=>p>=1?'#22C55E':p>=THRESH?'#6C4DF6':p>=.4?'#F59E0B':p>0?'#FF7A59':'var(--line)';
+const pcol=id=>PCOL[everyone().indexOf(id)%PCOL.length];
+const tagOf=id=>id===S.current?'<span class="tag me">You</span>':isLocal(id)?'<span class="tag">this device</span>':S.friends[id].src==='cloud'?`<span class="tag">☁️ ${ago(S.friends[id].updated)}</span>`:`<span class="tag">🔗 shared ${ago(S.friends[id].updated)}</span>`;
+
+/* ================= render ================= */
+function go(t){tab=t;if(t==='today')viewDate=new Date();if(t!=='progress')viewUser=null;render();window.scrollTo(0,0);if(t==='team')pull(true)}
+function render(){
+ if(!S){renderOnboard();return}
+ $('#nav').style.display='';$('#hdr').style.display='';
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+ renderHeader();
+ ({today:renderToday,team:renderTeam,progress:renderProgress,badges:renderBadges,settings:renderSettings})[tab]()}
+
+function renderHeader(){const u=U(),st=allStats(S.current),lv=level(st.xp);
+ $('#hdr').innerHTML=`<button class="who" onclick="openUsers()"><span class="av">${u.avatar}</span><span><b>${esc(u.name)} ▾</b><small>Level ${lv.n} · ${lv.name}</small></span></button>
+ <div class="hstats"><div class="pill" title="Current streak">🔥 ${st.cur}</div><div class="pill" title="Total XP">⭐ ${st.xp}</div></div>
+ <div class="xpbar"><i style="width:${(st.xp-lv.from)/(lv.to-lv.from)*100}%"></i></div>
+ <div class="xplbl">${lv.to-st.xp} XP to Level ${lv.n+1}</div>`}
+
+function rivalLine(){const ids=everyone();if(ids.length<2)return'';const k=key(new Date());
+ const rows=ids.map(id=>({id,...dayStats(id,k)})).sort((a,b)=>b.xp-a.xp);const me=rows.findIndex(r=>r.id===S.current);
+ let t;if(me===0){const r=rows[1];t=rows[0].xp===r.xp?`🤝 Tied with ${esc(person(r.id).name)} today — one more task to pull ahead!`:`👑 You're leading today, ${rows[0].xp-r.xp} XP ahead of ${esc(person(r.id).name)}`}
+ else{const r=rows[me-1];t=`🏃 ${esc(person(r.id).name)} is ${r.xp-rows[me].xp} XP ahead today (${r.done}/${r.total} done) — catch up!`}
+ return`<div class="rival" onclick="go('team')">${t} <small>›</small></div>`}
+
+function renderToday(){const k=key(viewDate),isToday=k===key(new Date()),log=D().log[k]||{};
+ const ts=tasks(S.current),s=dayStats(S.current,k),left=s.total-s.done,nm=nowMins(),W=S.settings.window;
+ const nx=isToday?ts.find(t=>!log[t.id]):null;const R=50,C=2*Math.PI*R;
+ let h=`<div class="datenav"><button onclick="shiftDay(-1)" aria-label="Previous day">‹</button>
+ <div><b>${isToday?'Today':fmtDate(viewDate)}</b><small>${isToday?fmtDate(viewDate):'Logging a past day (no on-time bonus)'}</small></div>
+ <button onclick="shiftDay(1)" ${isToday?'disabled':''} aria-label="Next day">›</button></div>
+ <div class="card hero"><div class="ringw"><svg viewBox="0 0 120 120" class="ring"><circle cx="60" cy="60" r="${R}" class="trk"/><circle cx="60" cy="60" r="${R}" class="prg" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-s.pct)}"/></svg>
+ <div class="ringtxt"><b>${Math.round(s.pct*100)}%</b><small>${s.done}/${s.total}</small></div></div>
+ <div class="herotxt"><h2>${msg(s,left)}</h2><p><b>${s.done}</b> done · <b>${left}</b> remaining</p><p class="xpday">+${s.xp} XP ${isToday?'today':'this day'}</p>
+ ${left&&s.total?`<p style="font-size:13px">Finish all for a <b>+50 XP</b> bonus</p>`:''}</div></div>`;
+ if(isToday)h+=rivalLine();
+ if(nx){const diff=nm-mins(nx.time);h+=`<div class="next">👉 Next up: ${nx.icon} ${esc(nx.name)} ${diff<-W?`at ${nx.time}`:diff>W?'(overdue — still worth 10 XP)':'— now! On-time bonus active ⚡'}</div>`}
+ ts.forEach(t=>{const e=log[t.id];let cls='task',st;
+  if(e){cls+=' done';st=e.t?`Done at ${e.t}${e.on?' · <span class="ontime">on time +5</span>':''}`:'Done'}
+  else if(isToday){const diff=nm-mins(t.time);
+   if(Math.abs(diff)<=W){cls+=' now';st='Do it now for +15 XP ⚡'}
+   else if(diff>W){cls+=' late';st=`Overdue by ${diff>=60?Math.floor(diff/60)+'h ':''}${diff%60}m · still +10 XP`}
+   else st=`In ${-diff>=60?Math.floor(-diff/60)+'h ':''}${(-diff)%60}m · on time = +15 XP`}
+  else st='Not logged · tap to mark done';
+  h+=`<div class="${cls}" onclick="toggle('${t.id}')"><div class="tm">${t.time}</div><div class="ic">${esc(t.icon)}</div><div class="tx"><b>${esc(t.name)}</b><small>${st}</small></div><div class="chk">${e?'✓':''}</div></div>`});
+ $('#main').innerHTML=h}
+
+function shiftDay(n){const d=addDays(viewDate,n);if(key(d)>key(new Date()))return;viewDate=d;render()}
+
+function toggle(id){const k=key(viewDate),d=D();d.log[k]=d.log[k]||{};
+ if(d.log[k][id]){delete d.log[k][id];if(!Object.keys(d.log[k]).length)delete d.log[k];toast('Unmarked')}
+ else{const isToday=k===key(new Date()),t=d.tasks.find(x=>x.id===id);const e={t:null,on:false};
+  if(isToday){const n=new Date();e.t=pad(n.getHours())+':'+pad(n.getMinutes());e.on=Math.abs(nowMins()-mins(t.time))<=S.settings.window}
+  d.log[k][id]=e;const a=dayStats(S.current,k);
+  if(a.done===a.total){confetti();toast('🏆 Perfect day! +50 bonus XP')}else toast(e.on?'⚡ On time! +15 XP':'✅ +10 XP');
+  if(navigator.vibrate)navigator.vibrate(30)}
+ d.updated=Date.now();save();checkBadges();render();schedulePush()}
+
+function checkBadges(){const d=D();d.seen=d.seen||[];const st=allStats(S.current);
+ BADGES.forEach(b=>{if(b.val(st)>=b.goal&&!d.seen.includes(b.id)){d.seen.push(b.id);setTimeout(()=>{toast(`🏅 Badge unlocked: ${b.icon} ${b.name}`);confetti()},1600)}});save()}
+
+/* ---------- TEAM ---------- */
+function miniRing(p,c){const R=20,C=2*Math.PI*R;return`<div class="mini"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${R}" stroke="var(--line)"/><circle cx="26" cy="26" r="${R}" stroke="${c}" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}"/></svg><span>${Math.round(p*100)}%</span></div>`}
+function renderTeam(){const ids=everyone(),k=key(new Date()),sy=S.settings.sync,connected=sy.db&&sy.group;
+ let h=`<div class="card" style="display:flex;align-items:center;gap:10px">${connected
+   ?`<div style="flex:1"><b>☁️ Team “${esc(sy.group)}”</b><br><small>Live sync · last synced ${ago(sy.last)}</small></div><button class="btn sm ghost" onclick="pull()">⟳ Sync</button><button class="btn sm" onclick="openInvite()">＋ Invite</button>`
+   :`<div style="flex:1"><b>Compete with friends</b><br><small>Share your progress or set up a live team</small></div><button class="btn sm" onclick="openShare()">Share / connect</button>`}</div>`;
+ if(ids.length<2){$('#main').innerHTML=h+`<div class="card empty"><div class="big">👥</div><h2 style="margin:6px 0">It's lonely at the top</h2><p><small>See how others are doing — today's progress, weekly leaderboard, streaks and head-to-head habits.</small></p>
+  <div class="btns" style="justify-content:center"><button class="btn" onclick="openShare()">🔗 Share / connect</button><button class="btn ghost" onclick="openUsers(true)">＋ Add person on this device</button></div></div>`;return}
+ // today
+ h+=`<h3>Today · live</h3><div class="card">`;
+ ids.map(id=>({id,...dayStats(id,k)})).sort((a,b)=>b.pct-a.pct||b.xp-a.xp).forEach(r=>{const p=person(r.id),lg=(P(r.id).log||{})[k]||{};
+  h+=`<div class="prow" onclick="viewProgress('${r.id}')">${miniRing(r.pct,pcol(r.id))}<div class="info"><b>${p.avatar} ${esc(p.name)}</b>${tagOf(r.id)}<br><small>${r.done}/${r.total} done · +${r.xp} XP${r.done===r.total&&r.total?' · 🏆 Perfect!':''}</small>
+  <div class="dots">${tasks(r.id).map(t=>`<i class="${lg[t.id]?'':'no'}" title="${esc(t.name)}">${esc(t.icon)}</i>`).join('')}</div></div><small>›</small></div>`});
+ h+=`</div>`;
+ // leaderboard
+ h+=`<h3>Leaderboard</h3><div class="seg">${[[7,'This week'],[30,'30 days'],[0,'All time']].map(([r,l])=>`<button class="${r===teamRange?'on':''}" onclick="teamRange=${r};render()">${l}</button>`).join('')}</div><div class="card"><table class="lbt"><tr><th>Person</th><th>XP</th><th>${teamRange?'Avg':'Lvl'}</th><th>🔥</th><th>${teamRange?'On time':'🏅'}</th></tr>`;
+ ids.map(id=>{const a=allStats(id);if(!teamRange)return{id,xp:a.xp,c2:level(a.xp).n,cur:a.cur,c4:BADGES.filter(b=>b.val(a)>=b.goal).length};const ps=periodStats(id,teamRange);return{id,xp:ps.xp,c2:Math.round(ps.avg*100)+'%',cur:a.cur,c4:Math.round(ps.ontime*100)+'%'}})
+  .sort((a,b)=>b.xp-a.xp).forEach((r,i)=>{const p=person(r.id);h+=`<tr class="${r.id===S.current?'me':''}"><td>${['🥇','🥈','🥉'][i]||(i+1)+'.'} ${p.avatar} ${esc(p.name)}</td><td>${r.xp}</td><td>${r.c2}</td><td>${r.cur}</td><td>${r.c4}</td></tr>`});
+ h+=`</table></div>`;
+ // trend chart
+ const N=14,W=300,H=100;let lines='',leg='';
+ ids.forEach(id=>{const pts=[];for(let i=N-1;i>=0;i--){const s=dayStats(id,key(addDays(new Date(),-i)));pts.push(`${((N-1-i)/(N-1))*W},${H-s.pct*H*.92-4}`)}
+  lines+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${pcol(id)}" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;leg+=`<span><i style="background:${pcol(id)}"></i> ${esc(person(id).name)}</span>`});
+ h+=`<h3>Completion trend · ${N} days</h3><div class="card chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${H-THRESH*H*.92-4}" y2="${H-THRESH*H*.92-4}" stroke="var(--mut)" stroke-dasharray="4 3" stroke-width=".6" vector-effect="non-scaling-stroke"/>${lines}</svg>
+  <div class="chartlbl"><span>${fmtDate(addDays(new Date(),-N+1))}</span><span>Today</span></div><div class="legend">${leg}</div></div>`;
+ // head to head by task name
+ const names=[];ids.forEach(id=>P(id).tasks.forEach(t=>{if(!names.find(n=>n.k===t.name.toLowerCase()))names.push({k:t.name.toLowerCase(),name:t.name,icon:t.icon,time:t.time})}));
+ names.sort((a,b)=>mins(a.time)-mins(b.time));
+ h+=`<h3>Habit head-to-head · last 30 days</h3><div class="card" style="overflow-x:auto"><table class="h2h"><tr><th></th>${ids.map(id=>`<th title="${esc(person(id).name)}">${person(id).avatar}</th>`).join('')}</tr>`;
+ names.forEach(n=>{const vals=ids.map(id=>{const t=P(id).tasks.find(x=>x.name.toLowerCase()===n.k);if(!t)return null;let c=0;for(let i=0;i<30;i++)if(((P(id).log||{})[key(addDays(new Date(),-i))]||{})[t.id])c++;return c/30});
+  const mx=Math.max(...vals.filter(v=>v!==null));
+  h+=`<tr><td>${esc(n.icon)} ${esc(n.name)}</td>${vals.map(v=>v===null?'<td style="background:var(--line);color:var(--mut)">–</td>':`<td class="${v===mx&&v>0&&ids.length>1?'best':''}" style="background:${v>0?col(v):'var(--line)'};${v>0?'':'color:var(--mut)'}">${Math.round(v*100)}%</td>`).join('')}</tr>`});
+ h+=`</table><small>Outlined = best in group. Tap a person above to see their full history.</small></div>`;
+ // manage friends
+ const fr=Object.keys(S.friends).filter(id=>!S.data[id]);
+ if(fr.length)h+=`<h3>Shared with you</h3><div class="card">${fr.map(id=>`<div class="row"><span>${S.friends[id].avatar}</span><div style="flex:1">${esc(S.friends[id].name)} ${tagOf(id)}</div><button class="btn sm red" onclick="removeFriend('${id}')">Remove</button></div>`).join('')}</div>`;
+ $('#main').innerHTML=h}
+function viewProgress(id){viewUser=id===S.current?null:id;tab='progress';render();window.scrollTo(0,0)}
+function removeFriend(id){if(!confirm(`Remove ${S.friends[id].name}? (Team members re-appear on next sync unless they leave the team.)`))return;delete S.friends[id];save();render()}
+
+/* ---------- PROGRESS ---------- */
+function renderProgress(){const id=viewUser&&P(viewUser)?viewUser:S.current,days=[];
+ for(let i=range-1;i>=0;i--){const dt=addDays(new Date(),-i);days.push({d:dt,...dayStats(id,key(dt))})}
+ const ps=periodStats(id,range),st=allStats(id),pp=person(id);
+ let h=id!==S.current?`<div class="viewing"><span class="av" style="background:var(--bg)">${pp.avatar}</span><div><b>${esc(pp.name)}'s progress</b><br><small>Level ${level(st.xp).n} · ${st.xp} XP · ${BADGES.filter(b=>b.val(st)>=b.goal).length} badges</small></div><button class="btn sm ghost" onclick="viewUser=null;go('team')">‹ Team</button></div>`:'';
+ h+=`<div class="seg">${[7,30,90].map(r=>`<button class="${r===range?'on':''}" onclick="range=${r};render()">${r} days</button>`).join('')}</div>
+ <div class="stats"><div class="stat"><b>${Math.round(ps.avg*100)}%</b><small>Avg completion</small></div>
+ <div class="stat"><b>${ps.perf}</b><small>Perfect days</small></div><div class="stat"><b>${ps.xp}</b><small>XP earned</small></div>
+ <div class="stat"><b>🔥 ${st.cur}</b><small>Current streak</small></div><div class="stat"><b>${st.best}</b><small>Best streak</small></div>
+ <div class="stat"><b>${Math.round(ps.ontime*100)}%</b><small>Done on time</small></div></div>`;
+ const w=range*10;let bars='';days.forEach((x,i)=>{const bh=Math.max(x.pct*100,x.pct?3:1.5);bars+=`<rect x="${i*10+1.5}" y="${100-bh}" width="7" height="${bh}" rx="2" fill="${col(x.pct)}"><title>${fmtDate(x.d)}: ${x.done}/${x.total}</title></rect>`});
+ h+=`<h3>Daily completion</h3><div class="card chart"><svg viewBox="0 0 ${w} 100" preserveAspectRatio="none">${bars}<line x1="0" x2="${w}" y1="30" y2="30" stroke="#6C4DF6" stroke-dasharray="4 3" stroke-width=".8" vector-effect="non-scaling-stroke"/></svg>
+ <div class="chartlbl"><span>${fmtDate(days[0].d)}</span><span>--- 70% streak target</span><span>Today</span></div></div>`;
+ h+=`<h3>Task consistency (last ${range} days)</h3><div class="card">`;
+ tasks(id).forEach(t=>{let c=0,o=0;days.forEach(x=>{const e=((P(id).log||{})[key(x.d)]||{})[t.id];if(e){c++;if(e.on)o++}});const p=c/range;
+  h+=`<div class="trow"><div style="font-size:20px">${esc(t.icon)}</div><div><span>${esc(t.name)}</span> <small>· ${c?Math.round(o/c*100):0}% on time</small><div class="bar"><i style="width:${p*100}%;background:${col(p)}"></i></div></div><em>${Math.round(p*100)}%</em></div>`});
+ h+=`</div>`;
+ const today=new Date(),start=addDays(today,-((today.getDay()+6)%7)-77);let cells='';
+ for(let i=0;i<84;i++){const dt=addDays(start,i);if(key(dt)>key(today)){cells+='<i style="opacity:0"></i>';continue}const s=dayStats(id,key(dt));cells+=`<i title="${fmtDate(dt)}: ${s.done}/${s.total}" style="background:${col(s.pct)}"></i>`}
+ h+=`<h3>Last 12 weeks</h3><div class="card"><div class="heat">${cells}</div><div class="legend">Less ${[0,.2,.5,.8,1].map(p=>`<i style="background:${col(p)}"></i>`).join('')} More</div></div>`;
+ $('#main').innerHTML=h}
+
+function renderBadges(){const st=allStats(S.current);const got=BADGES.filter(b=>b.val(st)>=b.goal).length;
+ $('#main').innerHTML=`<h3>${got} of ${BADGES.length} badges unlocked</h3><div class="badges">${BADGES.map(b=>{const v=Math.min(b.val(st),b.goal),ok=v>=b.goal;
+  return`<div class="badge ${ok?'':'lock'}"><div class="bi">${b.icon}</div><b>${b.name}</b><small>${b.desc}</small><div class="bar"><i style="width:${v/b.goal*100}%"></i></div><small style="min-height:0;margin-top:4px">${ok?'✅ Unlocked':`${v} / ${b.goal}`}</small></div>`}).join('')}</div>
+  <h3>How scoring works</h3><div class="card" style="line-height:1.7">✅ Task done: <b>+10 XP</b><br>⚡ Done within ±${S.settings.window} min of ideal time: <b>+5 XP</b><br>🏆 All tasks in a day: <b>+50 XP</b><br>🔥 Streak: consecutive days with ≥70% of tasks done</div>`}
+
+function renderSettings(){const u=U(),sy=S.settings.sync;
+ let h=`<h3>People on this device</h3><div class="card">${S.users.map(x=>`<div class="row"><span class="av" style="background:var(--bg)">${x.avatar}</span><div style="flex:1"><b>${esc(x.name)}</b>${x.id===S.current?' <small>(active)</small>':''}</div>
+  ${x.id!==S.current?`<button class="btn sm ghost" onclick="switchUser('${x.id}')">Switch</button>`:''}<button class="btn sm ghost" onclick="renameUser('${x.id}')">Rename</button>${S.users.length>1?`<button class="btn sm red" onclick="delUser('${x.id}')">✕</button>`:''}</div>`).join('')}
+  <div class="btns"><button class="btn" onclick="openUsers(true)">＋ Add person</button></div></div>
+ <h3>Team sync (see each other's progress)</h3><div class="card">${sy.db&&sy.group
+   ?`<div class="row" style="border:0"><div style="flex:1">☁️ Connected to team <b>${esc(sy.group)}</b><br><small>Last synced ${ago(sy.last)}</small></div></div><div class="btns"><button class="btn" onclick="openInvite()">＋ Invite link</button><button class="btn ghost" onclick="pull()">⟳ Sync now</button><button class="btn red" onclick="leaveTeam()">Leave team</button></div>`
+   :`<small>Not connected. Set up a free live team, or just send a progress link.</small><div class="btns"><button class="btn" onclick="openShare()">Share / connect</button></div>`}</div>
+ <h3>${esc(u.name)}'s tasks & ideal times</h3><div class="card">${tasks(S.current).map(t=>`<div class="row"><input type="time" value="${t.time}" onchange="editTask('${t.id}','time',this.value)" style="width:105px">
+  <input value="${esc(t.icon)}" onchange="editTask('${t.id}','icon',this.value)" style="width:46px;text-align:center"><input value="${esc(t.name)}" onchange="editTask('${t.id}','name',this.value)" style="flex:1">
+  <button class="btn sm red" onclick="delTask('${t.id}')">✕</button></div>`).join('')}
+  <div class="btns"><button class="btn" onclick="addTask()">＋ Add task</button><button class="btn ghost" onclick="resetTasks()">Restore default list</button></div></div>
+ <h3>On-time window</h3><div class="card"><div class="row" style="border:0">Bonus if done within <select onchange="S.settings.window=+this.value;save();render()">${[15,30,45,60].map(m=>`<option ${m===S.settings.window?'selected':''} value="${m}">±${m} min</option>`).join('')}</select> of ideal time</div></div>
+ <h3>Backup</h3><div class="card"><small>Data is stored on this device. Export to back up or move to a new device (import merges, nothing is overwritten).</small>
+  <div class="btns"><button class="btn" onclick="exportData()">⬇ Export data</button><button class="btn ghost" onclick="$('#file').click()">⬆ Import / merge</button><button class="btn red" onclick="wipe()">Erase all</button></div></div>`;
+ $('#main').innerHTML=h}
+
+/* ================= sharing & sync ================= */
+const appUrl=()=>location.href.split('#')[0].split('?')[0];
+function sheet(html){document.querySelector('.ov')?.remove();const ov=document.createElement('div');ov.className='ov';ov.onclick=e=>{if(e.target===ov)ov.remove()};ov.innerHTML=`<div class="sheet">${html}</div>`;document.body.appendChild(ov);return ov}
+const closeSheet=()=>document.querySelector('.ov')?.remove();
+async function shareLink(url,title){try{if(navigator.share){await navigator.share({title,text:title,url});return}}catch(e){if(e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(url);toast('Link copied 📋 — paste it in WhatsApp/email')}catch(e){prompt('Copy this link:',url)}}
+
+/* Option A: snapshot link (no setup) */
+function snapshotLink(id=S.current){const p=P(id),u=person(id),ts=p.tasks,d={};
+ for(let i=0;i<120;i++){const k=key(addDays(new Date(),-i)),lg=p.log[k];if(!lg)continue;let dm=0,om=0;ts.forEach((t,j)=>{if(lg[t.id]){dm|=1<<j;if(lg[t.id].on)om|=1<<j}});if(dm)d[k.replace(/-/g,'')]=om?[dm,om]:dm}
+ return appUrl()+'#snap='+b64e(JSON.stringify({v:1,i:id,n:u.name,a:u.avatar,u:Date.now(),t:ts.map(t=>[t.time,t.name,t.icon]),d}))}
+function readSnapshot(s){const o=JSON.parse(b64d(s));if(o.v!==1)throw 0;const tasks=o.t.map((x,j)=>({id:'k'+j,time:x[0],name:x[1],icon:x[2]})),log={};
+ for(const k in o.d){const v=o.d[k],dm=Array.isArray(v)?v[0]:v,om=Array.isArray(v)?v[1]:0,kk=`${k.slice(0,4)}-${k.slice(4,6)}-${k.slice(6)}`;log[kk]={};tasks.forEach((t,j)=>{if(dm&1<<j)log[kk][t.id]={on:!!(om&1<<j)}})}
+ return{id:o.i,name:o.n,avatar:o.a,tasks,log,updated:o.u,src:'snap'}}
+
+/* Option B: live team via Firebase Realtime Database (free) */
+const normDb=s=>{s=(s||'').trim().replace(/\/+$/,'');if(s&&!/^https?:\/\//.test(s))s='https://'+s;return s};
+const teamUrl=(p='')=>`${S.settings.sync.db}/dailyquest/${encodeURIComponent(S.settings.sync.group)}/members${p}.json`;
+let pushT,pulling=false;
+function schedulePush(){if(!S.settings.sync.db)return;clearTimeout(pushT);pushT=setTimeout(push,1500)}
+async function push(){const sy=S.settings.sync;if(!sy.db||!sy.group)return;
+ try{await Promise.all(S.users.map(u=>{const d=S.data[u.id],log={};const cut=key(addDays(new Date(),-400));for(const k in d.log)if(k>=cut)log[k]=d.log[k];
+  return fetch(teamUrl('/'+u.id),{method:'PUT',body:JSON.stringify({name:u.name,avatar:u.avatar,tasks:d.tasks,log,updated:Date.now()})}).then(r=>{if(!r.ok)throw new Error(r.status)})}));
+  sy.last=Date.now();save()}catch(e){console.warn('push failed',e)}}
+async function pull(silent){const sy=S.settings.sync;if(!sy.db||!sy.group||pulling)return;pulling=true;
+ try{await push();const r=await fetch(teamUrl());if(!r.ok)throw new Error('HTTP '+r.status);const m=await r.json()||{};
+  for(const id in S.friends)if(S.friends[id].src==='cloud')delete S.friends[id];
+  for(const id in m){if(S.data[id]||!m[id]||!m[id].tasks)continue;S.friends[id]={name:m[id].name,avatar:m[id].avatar,tasks:m[id].tasks,log:m[id].log||{},updated:m[id].updated,src:'cloud'}}
+  sy.last=Date.now();save();if(!silent)toast('☁️ Team synced');if(tab==='team'||tab==='today')render()}
+ catch(e){if(!silent)toast('⚠️ Sync failed — check connection / database URL')}pulling=false}
+function inviteLink(){return appUrl()+'#join='+b64e(JSON.stringify({db:S.settings.sync.db,g:S.settings.sync.group}))}
+async function connect(db,group){db=normDb(db);group=(group||'').trim().replace(/[.#$\[\]\/]/g,'-');if(!db||!group){toast('Enter both the database URL and a team code');return false}
+ try{const r=await fetch(`${db}/dailyquest/${encodeURIComponent(group)}/members.json?shallow=true`);if(!r.ok)throw 0}catch(e){toast('⚠️ Could not reach that database — check the URL and rules');return false}
+ S.settings.sync={db,group,last:0};save();await pull(true);toast(`☁️ Joined team “${group}”`);return true}
+function leaveTeam(){if(!confirm('Leave the team? Your data stays on this device; teammates will no longer see updates.'))return;
+ const sy=S.settings.sync;S.users.forEach(u=>fetch(teamUrl('/'+u.id),{method:'DELETE'}).catch(()=>{}));
+ for(const id in S.friends)if(S.friends[id].src==='cloud')delete S.friends[id];S.settings.sync={db:'',group:'',last:0};save();render()}
+
+function openShare(){const sy=S.settings.sync,file=location.protocol==='file:';
+ sheet(`<h2>👥 See each other's progress</h2>
+ ${file?`<p style="color:var(--bad);font-size:14px">⚠️ You're opening the app as a local file. Host it online first (e.g. Netlify Drop) so links work for others.</p>`:''}
+ <div class="card" style="box-shadow:none;border:1px solid var(--line)"><b>Option 1 · Quick share link</b> <span class="tag">no setup</span>
+ <p><small>Sends a snapshot of your progress. Your friend opens it and you appear on their Team tab. They send theirs back the same way. Re-share anytime to update.</small></p>
+ <div class="btns"><button class="btn" onclick="shareLink(snapshotLink(),'${esc(U().name).replace(/'/g,'')}\\'s Daily Quest progress')">🔗 Share my progress</button></div></div>
+ <div class="card" style="box-shadow:none;border:1px solid var(--line)"><b>Option 2 · Live team</b> <span class="tag">auto-updates</span>
+ <p><small>Everyone's progress syncs automatically. One person sets up a free Firebase database once (5 min), then shares an invite link.</small></p>
+ <details><summary style="cursor:pointer;font-size:14px;font-weight:600">How to set it up</summary><ol>
+ <li>Go to <b>console.firebase.google.com</b> with a personal Google account → <b>Create project</b> (Analytics off).</li>
+ <li>Build → <b>Realtime Database</b> → Create database → pick a location → <b>Start in test mode</b>.</li>
+ <li>Open the <b>Rules</b> tab, paste the rules below and Publish (keeps it open only for this app's data, without expiry):<br><code>{"rules":{"dailyquest":{"$team":{".read":true,".write":true}}}}</code></li>
+ <li>Copy the database URL shown at the top (ends in <code>firebaseio.com</code> or <code>firebasedatabase.app</code>) and paste it below.</li>
+ <li>Pick a hard-to-guess team code — it works like a password.</li></ol></details>
+ <label class="f">Database URL</label><input id="sdb" placeholder="https://my-quest-default-rtdb.europe-west1.firebasedatabase.app" value="${esc(sy.db)}">
+ <label class="f">Team code</label><input id="sgr" placeholder="e.g. jain-family-${Math.random().toString(36).slice(2,6)}" value="${esc(sy.group)}">
+ <div class="btns"><button class="btn" onclick="connect($('#sdb').value,$('#sgr').value||$('#sgr').placeholder.replace('e.g. ','')).then(ok=>{if(ok){closeSheet();openInvite()}})">Connect & get invite link</button></div></div>
+ <div class="btns"><button class="btn ghost" onclick="closeSheet()">Close</button></div>`)}
+function openInvite(){const l=inviteLink();sheet(`<h2>＋ Invite to “${esc(S.settings.sync.group)}”</h2><p><small>Anyone who opens this link joins your team and you'll see each other's progress live. Only share with people you trust.</small></p>
+ <input class="linkbox" readonly value="${esc(l)}" onclick="this.select()"><div class="btns"><button class="btn" onclick="shareLink(inviteLink(),'Join my Daily Quest team!')">📤 Share invite</button><button class="btn ghost" onclick="closeSheet()">Done</button></div>`)}
+
+function handleHash(){const h=location.hash;if(!h||h.length<6)return;
+ if(!S){localStorage.setItem('dq_pending',h);return}
+ history.replaceState(null,'',location.pathname+location.search);
+ try{if(h.startsWith('#snap=')){const f=readSnapshot(h.slice(6));if(S.data[f.id]){toast("That's your own progress link 🙂");return}
+   const old=S.friends[f.id];if(old&&old.updated>f.updated){toast('You already have a newer update from '+f.name);return}
+   S.friends[f.id]=f;save();tab='team';render();toast(`${f.avatar} ${f.name}'s progress added to Team`)}
+  else if(h.startsWith('#join=')){const o=JSON.parse(b64d(h.slice(6)));
+   sheet(`<h2>Join team “${esc(o.g)}”?</h2><p><small>Your daily progress will be shared with everyone in this team, and you'll see theirs.</small></p><div class="btns"><button class="btn" id="jbtn">Join team</button><button class="btn ghost" onclick="closeSheet()">Not now</button></div>`);
+   $('#jbtn').onclick=async()=>{if(await connect(o.db,o.g)){closeSheet();tab='team';render()}}}}
+ catch(e){toast('⚠️ That link looks broken or incomplete')}}
+
+/* ================= users ================= */
+function openUsers(addOnly){pickAv=AVATARS[S.users.length%AVATARS.length];
+ sheet(`${addOnly?'':`<h2>Who's checking in?</h2>${S.users.map(x=>`<div class="urow ${x.id===S.current?'on':''}" onclick="switchUser('${x.id}');closeSheet()"><span class="av" style="background:var(--bg)">${x.avatar}</span><div><b>${esc(x.name)}</b><br><small>Level ${level(allStats(x.id).xp).n} · 🔥 ${allStats(x.id).cur}</small></div></div>`).join('')}<hr style="border:0;border-top:1px solid var(--line);margin:14px 0">`}
+ <h2>Add a person on this device</h2><input id="nu" placeholder="Name" style="width:100%"><div class="emo" id="emo">${avPicker()}</div>
+ <div class="btns"><button class="btn" onclick="addUser()">Add & switch</button><button class="btn ghost" onclick="closeSheet()">Close</button></div>
+ <p><small>Different phone? Use <b>Team → Share / connect</b> instead.</small></p>`)}
+const avPicker=()=>AVATARS.map(a=>`<button class="${a===pickAv?'on':''}" onclick="pickAv='${a}';document.querySelectorAll('#emo button').forEach(b=>b.classList.toggle('on',b.textContent==='${a}'))">${a}</button>`).join('');
+function addUser(){const n=$('#nu').value.trim();if(!n){$('#nu').focus();return}const u=makeUser(n,pickAv);S.current=u.id;save();closeSheet();tab='today';viewDate=new Date();render();toast(`Welcome, ${n}! 🎉`);schedulePush()}
+function switchUser(id){S.current=id;save();viewDate=new Date();render();toast(`Switched to ${U().name}`)}
+function renameUser(id){const u=S.users.find(x=>x.id===id),n=prompt('New name',u.name);if(n&&n.trim()){u.name=n.trim();save();render();schedulePush()}}
+function delUser(id){const u=S.users.find(x=>x.id===id);if(!confirm(`Delete ${u.name} and all their history?`))return;if(S.settings.sync.db)fetch(teamUrl('/'+id),{method:'DELETE'}).catch(()=>{});S.users=S.users.filter(x=>x.id!==id);delete S.data[id];if(S.current===id)S.current=S.users[0].id;save();render()}
+
+function editTask(id,f,v){const t=D().tasks.find(x=>x.id===id);if(!v.trim())return render();t[f]=v.trim();save();render();schedulePush()}
+function delTask(id){if(!confirm('Remove this task? Past history for it is kept.'))return;D().tasks=D().tasks.filter(x=>x.id!==id);save();render();schedulePush()}
+function addTask(){D().tasks.push({id:uid(),time:'12:00',name:'New task',icon:'⭐'});save();render()}
+function resetTasks(){if(confirm('Restore the default task list?')){D().tasks=clone(DEFAULT_TASKS);save();render();schedulePush()}}
+
+function exportData(){const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`daily-quest-${key(new Date())}.json`;a.click();toast('Exported ✔')}
+function importData(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const inc=JSON.parse(r.result);if(!inc.users||!inc.data)throw 0;
+ inc.users.forEach(u=>{const src=inc.data[u.id];if(!src)return;if(!S.users.find(x=>x.id===u.id)){S.users.push(u);S.data[u.id]=src}
+  else{const dst=S.data[u.id];for(const k in src.log)dst.log[k]=Object.assign({},dst.log[k]||{},src.log[k])}});
+ save();render();toast('Data imported & merged ✔');schedulePush()}catch(e){alert('That file is not a valid Daily Quest export.')}};r.readAsText(f)}
+function wipe(){if(confirm('Erase ALL people and history on this device? Export first if unsure.')){localStorage.removeItem(STORE);S=null;render()}}
+
+function renderOnboard(){$('#nav').style.display='none';$('#hdr').style.display='none';
+ const pend=localStorage.getItem('dq_pending');
+ $('#main').innerHTML=`<div class="onb card"><div style="font-size:60px">🎯</div><h1>Daily Quest</h1><p><small>${pend?'You were invited! Create your profile to see their progress.':'Turn your daily routine into a game. Earn XP, build streaks, unlock badges — and compete with friends.'}</small></p>
+ <input id="on" placeholder="Your name"><div class="emo" id="emo">${avPicker()}</div>
+ <button class="btn" style="width:100%;padding:14px;font-size:17px" onclick="start()">Start my quest 🚀</button></div>`}
+function start(){const n=$('#on').value.trim();if(!n){$('#on').focus();return}S={users:[],current:null,settings:{window:30,sync:{db:'',group:'',last:0}},data:{},friends:{}};S.current=makeUser(n,pickAv).id;save();tab='today';render();
+ const pend=localStorage.getItem('dq_pending');if(pend){localStorage.removeItem('dq_pending');location.hash=pend.slice(1)}}
+
+/* ================= fx ================= */
+let tt;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2400)}
+function confetti(){const c=$('#fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+ const ps=Array.from({length:160},()=>({x:c.width/2,y:c.height/3,vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,s:Math.random()*7+4,c:PCOL[Math.random()*6|0],r:Math.random()*6}));
+ let f=0;(function a(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+  if(++f<150)requestAnimationFrame(a);else x.clearRect(0,0,c.width,c.height)})()}
+
+/* ================= boot ================= */
+let lastDay=key(new Date());
+setInterval(()=>{const k=key(new Date());if(k!==lastDay){if(key(viewDate)===lastDay)viewDate=new Date();lastDay=k}if(S&&(tab==='today'||tab==='team'))render()},60000);
+setInterval(()=>{if(S&&!document.hidden&&tab==='team')pull(true)},90000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S){if(key(viewDate)===lastDay)viewDate=new Date();lastDay=key(new Date());render();pull(true)}});
+window.addEventListener('hashchange',handleHash);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();handleHash();if(S)pull(true);
+</script>
+</body>
+</html>
